@@ -1,6 +1,6 @@
 import { createTool, Tool } from "@inngest/agent-kit";
 import { z } from "zod";
-import {NetworkState} from "@/services/state";
+import {NetworkState} from "@/services/ai/state";
 
 
 export const analyzeSensorTool = createTool({

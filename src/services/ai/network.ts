@@ -1,5 +1,5 @@
 import { createNetwork } from '@inngest/agent-kit';
-import {waterOpsAgent} from "@/services/agents/water-ops-agent";
+import {waterOpsAgent} from "@/services/ai/agents/water-ops-agent";
 
 
 const network = createNetwork({

@@ -1,0 +1,115 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+
+// --- Models ---
+// Maps to the 'users' table
+model User {
+  id       String   @id @default(cuid())
+  clerk_id String   @unique
+  email    String   @unique
+  
+  // Other user fields can go here, like name, password, etc.
+  name     String?  @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+
+  phone_number String?  @unique
+
+  role        String   @default("user")
+
+  // The user's preferred language, e.g., 'en', 'es', 'fr',
+  language    String   @default("en")
+
+  is_active  Boolean  @default(true)
+
+  // A list of all workflows belonging to this user.
+  workflows Workflow[]
+
+  // A list of all credentials belonging to this user.
+  credentials Credential[]
+
+  @@map("users")
+}
+
+
+// A workflow represents a user's entire configuration.
+model Workflow {
+  id          String         @id @default(cuid())
+  // The name of the workflow, as provided by the end-user.
+  name        String?
+
+  // A short description of the workflow.
+  description String?
+  workflow    Json?
+
+  // Wether the workflow is enabled or not
+  enabled     Boolean @default(false)
+
+  // The name of the inngest even triggering the workflow
+  trigger     String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt @default(now())
+
+  // The foreign key linking this workflow to a specific user.
+  userId      String
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+   // This is the new field to reference the join table.
+  workflowCredentials WorkflowCredential[]
+
+  @@index([userId])
+  @@map("workflows")
+}
+enum CredentialType {
+  GOOGLE
+  SLACK
+  HUBSPOT
+}
+
+model Credential {
+  id          String   @id @default(cuid())
+  name        String   // e.g., "Lab API Key" or "CRM Access"
+  type        CredentialType
+  secret      String   // encrypted value
+  config      Json?    // optional extra data (endpoint, token expiry)
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt @default(now())
+
+  // This is the new field to reference the join table.
+  workflowCredentials WorkflowCredential[]
+
+  @@index([userId])
+  @@map("credentials")
+}
+
+// This model acts as a join table for the many-to-many relationship
+// between Workflow and Credential.
+model WorkflowCredential {
+  // Composite ID to uniquely identify the relationship
+  workflowId   String
+  credentialId String
+
+  // Foreign keys linking to the Workflow and Credential models
+  workflow     Workflow   @relation(fields: [workflowId], references: [id])
+  credential   Credential @relation(fields: [credentialId], references: [id])
+
+  @@id([workflowId, credentialId])
+  @@map("workflow_credentials")
+}
+

@@ -1,5 +1,5 @@
 import {createAgent, gemini } from '@inngest/agent-kit';
-import {analyzeSensorTool} from "@/services/tools";
+import {analyzeSensorTool} from "@/services/ai/tools";
 
 
 export const waterOpsAgent = createAgent({

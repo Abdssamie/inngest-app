@@ -1,4 +1,4 @@
-import {aes256 as aes} from 'aes256';
+import {aes256 as aes} from "aes256";
 
 // Define a secret key. NOTE: Store this securely, e.g., in environment variables.
 const SECRET_KEY = process.env.ENCRYPTION_SECRET_KEY; // Must be 32 bytes for AES-256
@@ -29,7 +29,7 @@ export function encryptCredential(credentials: object): string {
  * @throws - An error if the secret key is not provided or the format is invalid.
  * @param encryptedString
  */
-export function decrypt(encryptedString: string): object {
+export function decryptCredential(encryptedString: string): object {
   // Check if the secret key is defined before proceeding
   if (!SECRET_KEY) {
     throw new Error('Secret key not found. Please set the SECRET_KEY environment variable.');
