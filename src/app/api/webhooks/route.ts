@@ -4,6 +4,20 @@ import {NextRequest} from 'next/server';
 import prisma from '@/lib/prisma';
 
 
+/**
+ * @swagger
+ * /api/webhooks:
+ *   post:
+ *     summary: Clerk webhook
+ *     description: Handles Clerk webhooks.
+ *     responses:
+ *       200:
+ *         description: Webhook received.
+ *       400:
+ *         description: Error verifying webhook.
+ *       500:
+ *         description: Error processing webhook.
+ */
 export async function POST(req: NextRequest) {
     console.log('Webhook POST request received.');
     try {
@@ -55,21 +69,21 @@ export async function POST(req: NextRequest) {
             try {
                 await prisma.user.delete({
                         where: {
-                            id: id
+                            clerk_id: id
                         }
                     })
 
                 console.log(
-                    'Successfully deleted user in Supabase with ID:',
+                    'Successfully deleted user in the database with ID:',
                     evt.data.id
                 );
             } catch
                 (error) {
                 console.error(
-                    'Caught exception while deleting user from Supabase:',
+                    'Caught exception while deleting user from the database:',
                     JSON.stringify(error, null, 2)
                 );
-                return new Response('Error deleting user from Supabase', {
+                return new Response('Error deleting user from the database', {
                     status: 500
                 });
             }
@@ -78,7 +92,7 @@ export async function POST(req: NextRequest) {
             try {
                 await prisma.user.update({
                     where: {
-                        id: id
+                        clerk_id: id
                     },
                     data: {
                         name: evt.data.first_name + ' ' + evt.data.last_name,
@@ -89,16 +103,16 @@ export async function POST(req: NextRequest) {
                 });
 
                 console.log(
-                    'Successfully updated user in Supabase with ID:',
+                    'Successfully updated user in the database with ID:',
                     evt.data.id
                 );
             } catch
                 (error) {
                 console.error(
-                    'Caught exception while updating user from Supabase:',
+                    'Caught exception while updating user from the database:',
                     JSON.stringify(error, null, 2)
                 );
-                return new Response('Error updating user from Supabase', {
+                return new Response('Error updating user from the database', {
                     status: 500
                 });
             }

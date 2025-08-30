@@ -72,6 +72,7 @@ model Workflow {
   @@index([userId])
   @@map("workflows")
 }
+
 enum CredentialType {
   GOOGLE
   SLACK
@@ -94,6 +95,7 @@ model Credential {
   // This is the new field to reference the join table.
   workflowCredentials WorkflowCredential[]
 
+  @@unique([userId, name])
   @@index([userId])
   @@map("credentials")
 }
@@ -106,8 +108,8 @@ model WorkflowCredential {
   credentialId String
 
   // Foreign keys linking to the Workflow and Credential models
-  workflow     Workflow   @relation(fields: [workflowId], references: [id])
-  credential   Credential @relation(fields: [credentialId], references: [id])
+  workflow     Workflow   @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  credential   Credential @relation(fields: [credentialId], references: [id], onDelete: Cascade)
 
   @@id([workflowId, credentialId])
   @@map("workflow_credentials")

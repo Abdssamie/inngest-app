@@ -25,7 +25,7 @@ export function encryptCredential(credentials: object): string {
 /**
  * Decrypts a string using AES-256-CBC.
  *
- * @returns The decrypted plaintext string.
+ * @returns The decrypted plaintext string as an object.
  * @throws - An error if the secret key is not provided or the format is invalid.
  * @param encryptedString
  */

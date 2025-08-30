@@ -9,7 +9,7 @@ import {
 import { JsonValue } from "@prisma/client/runtime/library";
 
 
-export async function storeCredential(userId: string, credentialData: CredentialCreateRequest): Promise<SafeCredentialResponse> {
+export async function storeCredential(userId: InternalUserId, credentialData: CredentialCreateRequest): Promise<SafeCredentialResponse> {
     const encryptedCredential = encryptCredential(credentialData.credential);
 
     // validate that the credential type is valid and exist in the enum CredentialType
@@ -40,7 +40,7 @@ export async function storeCredential(userId: string, credentialData: Credential
     }
 }
 
-export async function updateCredential(userId: string, credentialId: string, credentials: DecryptedCredentialPayload): Promise<SafeCredentialResponse> {
+export async function updateCredential(userId: InternalUserId, credentialId: string, credentials: DecryptedCredentialPayload): Promise<SafeCredentialResponse> {
     const encryptedCredential = encryptCredential(credentials);
 
     try {
@@ -66,7 +66,7 @@ export async function updateCredential(userId: string, credentialId: string, cre
     }
 }
 
-export async function deleteCredential(userId: string, credentialId: string) {
+export async function deleteCredential(userId: InternalUserId, credentialId: string) {
     try {
          await prisma.credential.delete({
             where: {
@@ -80,7 +80,7 @@ export async function deleteCredential(userId: string, credentialId: string) {
 }
 
 
-export async function getAllUserCredentials(userId: string): Promise<SafeCredentialResponse[]> {
+export async function getAllUserCredentials(userId: InternalUserId): Promise<SafeCredentialResponse[]> {
     try {
         const credentials = await prisma.credential.findMany({
             where: {
@@ -101,7 +101,7 @@ export async function getAllUserCredentials(userId: string): Promise<SafeCredent
     }
 }
 
-export async function getCredential(userId: string, credentialId: string): Promise<SafeCredentialResponse | null> {
+export async function getCredential(userId: InternalUserId, credentialId: string): Promise<SafeCredentialResponse | null> {
     try {
         const credential = await prisma.credential.findUnique({
             where: {
