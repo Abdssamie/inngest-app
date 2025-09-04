@@ -1,6 +1,6 @@
 import { serve } from "inngest/next";
 import { inngest } from "@/inngest/client";
-import { helloWorld } from "@/inngest/functions/hello-world";
+import {generateDailyReportDispatcher, generateDailyReport} from "@/inngest/functions/schedules/generate-daily-report";
 
 /**
  * @swagger
@@ -18,6 +18,7 @@ import { helloWorld } from "@/inngest/functions/hello-world";
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
-    helloWorld, // <-- This is where you'll always add all your functions
+    generateDailyReportDispatcher, // <-- This is where you'll always add all your functions
+      generateDailyReport
   ],
 });

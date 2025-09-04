@@ -5,72 +5,56 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
   directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
-
 
 // --- Models ---
 // Maps to the 'users' table
 model User {
-  id       String   @id @default(cuid())
-  clerk_id String   @unique
-  email    String   @unique
-  
+  id       String @id @default(cuid())
+  clerk_id String @unique
+  email    String @unique
+
   // Other user fields can go here, like name, password, etc.
-  name     String?  @unique
+  name String? @unique
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
-  phone_number String?  @unique
+  phone_number String? @unique
 
-  role        String   @default("user")
+  role String @default("user")
 
   // The user's preferred language, e.g., 'en', 'es', 'fr',
-  language    String   @default("en")
+  language String @default("en")
 
-  is_active  Boolean  @default(true)
+  is_active Boolean @default(true)
 
   // A list of all workflows belonging to this user.
   workflows Workflow[]
 
   // A list of all credentials belonging to this user.
   credentials Credential[]
+  schedules   Schedule[]
 
   @@map("users")
 }
 
 
-// A workflow represents a user's entire configuration.
-model Workflow {
-  id          String         @id @default(cuid())
-  // The name of the workflow, as provided by the end-user.
-  name        String?
-
-  // A short description of the workflow.
-  description String?
-  workflow    Json?
-
-  // Wether the workflow is enabled or not
-  enabled     Boolean @default(false)
-
-  // The name of the inngest even triggering the workflow
-  trigger     String?
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt @default(now())
-
-  // The foreign key linking this workflow to a specific user.
-  userId      String
-  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-   // This is the new field to reference the join table.
-  workflowCredentials WorkflowCredential[]
-
-  @@index([userId])
-  @@map("workflows")
+// A generic model to store all user-defined schedules
+model Schedule {
+  id             String       @id @default(cuid())
+  user           User         @relation(fields: [userId], references: [id])
+  userId         String
+  cronExpression String       // e.g., "0 9 * * *"
+  eventName      String       
+  timezone       String?      // e.g., "America/New_York"
+  payload        Json?        // To store any data specific to this job type
+  isActive       Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 }
 
 enum CredentialType {
@@ -80,17 +64,17 @@ enum CredentialType {
 }
 
 model Credential {
-  id          String   @id @default(cuid())
-  name        String   // e.g., "Lab API Key" or "CRM Access"
-  type        CredentialType
-  secret      String   // encrypted value
-  config      Json?    // optional extra data (endpoint, token expiry)
+  id     String         @id @default(cuid())
+  name   String // e.g., "Lab API Key" or "CRM Access"
+  type   CredentialType
+  secret String // encrypted value
+  config Json? // optional extra data (endpoint, token expiry)
 
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   // This is the new field to reference the join table.
   workflowCredentials WorkflowCredential[]
@@ -98,6 +82,42 @@ model Credential {
   @@unique([userId, name])
   @@index([userId])
   @@map("credentials")
+}
+
+enum TriggerType {
+  EVENT
+  SCHEDULE
+}
+
+// A workflow represents a user's entire configuration.
+model Workflow {
+  id   String @id @default(cuid())
+  // The name of the workflow, must match the inngest function id
+  name String
+
+  // A short description of the workflow.
+  description String?
+
+  // Wether the workflow is enabled or not
+  enabled Boolean @default(false)
+
+  triggerType TriggerType @default(EVENT)
+
+  // The name of the event or the cron value for the schedule eg. "TZ=Europe/Paris 0 12 * * 5"
+  trigger String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // The foreign key linking this workflow to a specific user.
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // This is the new field to reference the join table.
+  workflowCredentials WorkflowCredential[]
+
+  @@index([userId])
+  @@map("workflows")
 }
 
 // This model acts as a join table for the many-to-many relationship
@@ -108,8 +128,8 @@ model WorkflowCredential {
   credentialId String
 
   // Foreign keys linking to the Workflow and Credential models
-  workflow     Workflow   @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-  credential   Credential @relation(fields: [credentialId], references: [id], onDelete: Cascade)
+  workflow   Workflow   @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  credential Credential @relation(fields: [credentialId], references: [id], onDelete: Cascade)
 
   @@id([workflowId, credentialId])
   @@map("workflow_credentials")

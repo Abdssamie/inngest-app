@@ -11,26 +11,42 @@ export const credentialMiddleware = new InngestMiddleware({
                 return {
                     async transformInput({ ctx }) {
                         const { event } = ctx;
-                        const { credentialsId } = event.data;
+
                         const userId = event.user?.id;
-                        
-                        if (!credentialsId || !userId) {
+
+                        if (!userId) {
                             return;
                         }
 
-                        const credentials = await prisma.credential.findMany({
+                        const workflow = await prisma.workflow.findFirst({
                             where: {
-                                id: credentialsId,
+                                trigger: event.name,
                                 userId: userId,
                             },
+                            include: {
+                                workflowCredentials: {
+                                    include: {
+                                        credential: true
+                                    },
+                                }
+                            }
                         });
 
 
-                        const decryptedCredentials = credentials.map((cred) => (
+                        // Check if there are any credentials
+                        if (workflow?.workflowCredentials?.length === 0 || workflow?.workflowCredentials === undefined || length === 0) {
+                            return {
+                                ctx: {
+                                    credentials: [],
+                                }
+                            }
+                        }
+
+                        const decryptedCredentials = workflow.workflowCredentials.map((workflowCred) => (
                             {
-                                ...cred,
-                                secret: undefined,
-                                data: decryptCredential(cred.secret)
+                                data: decryptCredential(workflowCred.credential.secret),
+                                type: workflowCred.credential.type,
+                                id: workflowCred.credential.id,
                             }
                         ));
 

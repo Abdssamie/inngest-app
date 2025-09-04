@@ -1,0 +1,16 @@
+[
+  {
+    "id": "dispatch-daily-reports",
+    "name": "Dispatch an event to generate daily reports",
+    "description": "Dispatch an event to generate daily reports",
+    "trigger_type": "SCHEDULE",
+    "trigger": "0 0 * * *"
+  },
+  {
+    "id": "generate-daily-report",
+    "name": "Generate a daily report",
+    "description": "Generate a daily report for a user",
+    "trigger_type": "EVENT",
+    "trigger": "app/generate.daily.report"
+  }
+]

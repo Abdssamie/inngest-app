@@ -61,7 +61,6 @@ const options = {
             description: { type: 'string' },
             enabled: { type: 'boolean' },
             trigger: { type: 'string' },
-            workflow: { type: 'object' },
             credentials: {
               type: 'array',
               items: {
@@ -80,7 +79,6 @@ const options = {
             description: { type: 'string' },
             enabled: { type: 'boolean' },
             trigger: { type: 'string' },
-            workflow: { type: 'object' },
             credentials: {
               type: 'array',
               items: {

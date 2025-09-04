@@ -49,7 +49,7 @@ export async function GET() {
         return new Response("User not found", { status: 404 });
     }
 
-    const scopes = ["https://www.googleapis.com/auth/gmail.send"];
+    const scopes = ["https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.com/auth/sheets", "https://www.googleapis.com/auth/drive"];
 
     const url = oauth2Client.generateAuthUrl({
       access_type: "offline",
