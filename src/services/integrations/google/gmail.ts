@@ -1,5 +1,5 @@
 import { google } from "googleapis";
-import {GoogleService} from "@/lib/integrations/google/google";
+import {GoogleService} from "@/services/integrations/google/google";
 
 const GOOGLE_OAUTH_CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID;
 const GOOGLE_OAUTH_CLIENT_SECRET = process.env.GOOGLE_OAUTH_CLIENT_SECRET;

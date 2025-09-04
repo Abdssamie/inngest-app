@@ -1,7 +1,7 @@
 import { google } from "googleapis";
-import { updateCredential } from "@/services/credentials-store";
-import { GoogleCredentialPayload } from "@/types/credentials/credential-types";
 import { OAuth2Client } from "google-auth-library";
+import { GoogleOAuthSecret } from "@/lib/credentials/schema";
+import { updateCredential } from "@/services/credentials-store";
 
 const GOOGLE_OAUTH_CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID;
 const GOOGLE_OAUTH_CLIENT_SECRET = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
@@ -13,13 +13,13 @@ if (!GOOGLE_OAUTH_CLIENT_ID || !GOOGLE_OAUTH_CLIENT_SECRET) {
 export class GoogleService {
   protected readonly oauth2Client : OAuth2Client;
   protected readonly credentialId: string;
-  protected credentialPayload: GoogleCredentialPayload;
+  protected credentialPayload: GoogleOAuthSecret;
   protected readonly userId: string;
 
   constructor(
     userId: string,
     credentialId: string,
-    credentialPayload: GoogleCredentialPayload
+    credentialPayload: GoogleOAuthSecret
   ) {
     this.userId = userId;
     this.credentialId = credentialId;
@@ -58,7 +58,7 @@ export class GoogleService {
           refresh_token: this.credentialPayload.refreshToken, // The refresh token itself doesn't change
       });
 
-      const updatedPayload: GoogleCredentialPayload = {
+      const updatedPayload: GoogleOAuthSecret = {
         ...this.credentialPayload,
         accessToken: newAccessToken,
         expiresIn: newExpiresIn,

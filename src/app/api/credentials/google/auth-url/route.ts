@@ -25,7 +25,16 @@ const oauth2Client = new google.auth.OAuth2(
  * @swagger
  * /api/google/auth-url:
  *   get:
- *     summary: Get Google OAuth URL
+ *     summary: Get Google OAuth URL from specified scopes
+ *     tags: [Google]
+ *     parameters:
+ *       - in: query
+ *         name: scopes
+ *         schema:
+ *           type: array
+ *           items:
+ *             type: string
+ *         required: true
  *     description: Returns a Google OAuth URL for the authenticated user.
  *     responses:
  *       200:
@@ -35,7 +44,10 @@ const oauth2Client = new google.auth.OAuth2(
  *       500:
  *         description: Internal Server Error.
  */
-export async function GET() {
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const scopes = searchParams.getAll("scopes");
+
   try {
     const user = await auth();
 
@@ -46,10 +58,8 @@ export async function GET() {
     const id = await getInternalUserId(user.userId as ClerkUserId);
 
     if (!id) {
-        return new Response("User not found", { status: 404 });
+      return new Response("User not found", { status: 404 });
     }
-
-    const scopes = ["https://www.googleapis.com/auth/gmail.send", "https://www.googleapis.com/auth/sheets", "https://www.googleapis.com/auth/drive"];
 
     const url = oauth2Client.generateAuthUrl({
       access_type: "offline",

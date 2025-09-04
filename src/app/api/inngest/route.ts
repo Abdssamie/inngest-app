@@ -1,6 +1,7 @@
 import { serve } from "inngest/next";
 import { inngest } from "@/inngest/client";
-import {generateDailyReportDispatcher, generateDailyReport} from "@/inngest/functions/schedules/generate-daily-report";
+import { generateReportSchedule, generateReport } from "@/inngest/functions/schedules/generate-daily-report";
+import { handleScheduleRequest } from "@/inngest/functions/schedules/scheduler-runner";
 
 /**
  * @swagger
@@ -18,7 +19,8 @@ import {generateDailyReportDispatcher, generateDailyReport} from "@/inngest/func
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
-    generateDailyReportDispatcher, // <-- This is where you'll always add all your functions
-      generateDailyReport
+    generateReportSchedule,
+    generateReport,
+    handleScheduleRequest
   ],
 });

@@ -3,9 +3,9 @@ import { google } from "googleapis";
 import { storeCredential } from "@/services/credentials-store";
 import {
   CredentialCreateRequest,
-  DecryptedCredentialPayload,
 } from "@/types/credentials/credential-types";
-import { CredentialType } from "@prisma/client";
+import { CredentialType, Provider } from "@prisma/client";
+import { GoogleOAuthSecret } from "@/lib/credentials/schema";
 
 const GOOGLE_OAUTH_CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID;
 const GOOGLE_OAUTH_CLIENT_SECRET = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
@@ -76,8 +76,7 @@ export async function GET(request: Request) {
         throw new Error("Incomplete token data from Google.");
     }
 
-    const credentialPayload: DecryptedCredentialPayload = {
-      type: CredentialType.GOOGLE,
+    const credentialPayload: GoogleOAuthSecret = {
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token,
       expiresIn: tokens.expiry_date,
@@ -86,9 +85,9 @@ export async function GET(request: Request) {
 
     const createRequest: CredentialCreateRequest = {
       name: `Google (${userInfo.email})`,
-      type: CredentialType.GOOGLE,
-      credential: credentialPayload,
-      config: null,
+      type: CredentialType.OAUTH,
+      provider: Provider.GOOGLE,
+      secret: credentialPayload,
     };
 
     await storeCredential(state as InternalUserId, createRequest);

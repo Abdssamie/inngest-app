@@ -5,24 +5,31 @@ import prisma from "@/lib/prisma"
 import { MinimalEventPayload } from "inngest/types";
 import { User } from "@prisma/client";
 import logger from "@/services/logging";
+import { sheetsMiddleware } from "./middleware/sheets";
+import { WorkflowInput } from "@/lib/workflow/schema";
 
-// Base required fields for data
-type BaseUserEventData = {
-    user_id: InternalUserId;
-};
 
 // Allow extending with optional fields via a generic
 type UserEventPayload<T extends object = {}> = {
     user: User; // From Prisma
-    data: BaseUserEventData & T; // Merge required + optional
+    data: { user_id: InternalUserId } & T; // Merge required + optional
 };
 
-export type ScheduleEventPayload<T extends object = {
-    scheduleId: string;
-    user_id: string;
-}> = {
+export type SchedulableEventPayload<T extends object = { user_id: InternalUserId }> = {
     user: User; // From Prisma
-    data: BaseUserEventData & T; // Merge required + optional
+    data: {
+        input: WorkflowInput | null,
+        scheduledRun: boolean,
+        workflowId: string,
+        cronExpression: string | null,
+        tz: string | null
+    } & T;
+}
+
+export type ScheduleStopPayload<T extends object = { user_id: InternalUserId }> = {
+    data: {
+        workflowId: string,
+    } & T,
 }
 
 export type Events = {
@@ -30,18 +37,35 @@ export type Events = {
     "internal/user/new.signup": UserEventPayload<{ plan?: string; referralCode?: string; }>;
     "internal/user/new.google.signup": UserEventPayload<{ plan?: string; referralCode?: string; }>;
 
-    // App events
-    "app/schedule/run": ScheduleEventPayload;
-    
-    "app/schedule/report.requested": ScheduleEventPayload;
-    "app/report.requested": UserEventPayload<{ user_id: string;}>;
+    // Workflow events
+    "workflow/schedule/stop": ScheduleStopPayload;
+    "workflow/report.requested": SchedulableEventPayload;
 
     // Scratchpad events
     "blog-post.updated": MinimalEventPayload<{}>;
     "invoice/data.submitted": MinimalEventPayload<{ data: any; }>;
 };
 
+// Array of the event keys for runtime check
+const eventKeys = [
+    "internal/user/new.signup",
+    "internal/user/new.google.signup",
+    "workflow/schedule/stop",
+    "workflow/schedule/report.requested",
+    "app/report.requested",
+    "blog-post.updated",
+    "invoice/data.submitted",
+] as const;
+
+// Create a union type of all the keys from the Events type
+type EventKeys = keyof Events;
+
 export type EventFor<K extends keyof Events> = { name: K } & Events[K];
+
+// Type guard function to check if the input string is a valid event key
+export function isEventKey(str: string): str is EventKeys {
+    return (eventKeys as readonly string[]).includes(str);
+}
 
 // Create a client to send and receive events
 export const inngest = new Inngest({
@@ -49,7 +73,8 @@ export const inngest = new Inngest({
     middleware: [
         dependencyInjectionMiddleware({ prisma }),
         credentialMiddleware,
-        gmailMiddleware
+        gmailMiddleware,
+        sheetsMiddleware
     ],
     logger: logger,
     schemas: new EventSchemas().fromRecord<Events>()

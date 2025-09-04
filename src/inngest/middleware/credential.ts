@@ -32,16 +32,6 @@ export const credentialMiddleware = new InngestMiddleware({
                             }
                         });
 
-
-                        // Check if there are any credentials
-                        if (workflow?.workflowCredentials?.length === 0 || workflow?.workflowCredentials === undefined || length === 0) {
-                            return {
-                                ctx: {
-                                    credentials: [],
-                                }
-                            }
-                        }
-
                         const decryptedCredentials = workflow.workflowCredentials.map((workflowCred) => (
                             {
                                 data: decryptCredential(workflowCred.credential.secret),

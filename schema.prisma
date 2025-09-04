@@ -23,7 +23,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  phone_number String? @unique
+  phone_number String? @unique /// @encrypted
 
   role String @default("user")
 
@@ -37,37 +37,31 @@ model User {
 
   // A list of all credentials belonging to this user.
   credentials Credential[]
-  schedules   Schedule[]
 
   @@map("users")
 }
 
-
-// A generic model to store all user-defined schedules
-model Schedule {
-  id             String       @id @default(cuid())
-  user           User         @relation(fields: [userId], references: [id])
-  userId         String
-  cronExpression String       // e.g., "0 9 * * *"
-  eventName      String       
-  timezone       String?      // e.g., "America/New_York"
-  payload        Json?        // To store any data specific to this job type
-  isActive       Boolean      @default(false)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+enum CredentialType {
+  OAUTH
+  API_KEY
+  // Add more general types here if needed
 }
 
-enum CredentialType {
+enum Provider {
   GOOGLE
   SLACK
   HUBSPOT
+  FIRECRAWL
+  CUSTOM
 }
 
 model Credential {
-  id     String         @id @default(cuid())
-  name   String // e.g., "Lab API Key" or "CRM Access"
-  type   CredentialType
-  secret String // encrypted value
+  id       String         @id @default(cuid())
+  name     String // e.g., "Lab API Key" or "CRM Access"
+  type     CredentialType
+  provider Provider
+
+  secret String /// @encrypted
   config Json? // optional extra data (endpoint, token expiry)
 
   userId String
@@ -84,11 +78,6 @@ model Credential {
   @@map("credentials")
 }
 
-enum TriggerType {
-  EVENT
-  SCHEDULE
-}
-
 // A workflow represents a user's entire configuration.
 model Workflow {
   id   String @id @default(cuid())
@@ -98,13 +87,20 @@ model Workflow {
   // A short description of the workflow.
   description String?
 
-  // Wether the workflow is enabled or not
-  enabled Boolean @default(false)
+  // Wether the workflow is scheduled to run or not
+  enabled Boolean @default(false)  
 
-  triggerType TriggerType @default(EVENT)
+  canBeScheduled Boolean @default(false)
+
+  cronExpressions String[] @default([]) // Multiple schedules  e.g., ["0 9 * * *", "0 12 * * *"]
+  timezone       String? @default("UTC") // e.g., "America/New_York"
+  lastRunAt      DateTime?
+  nextRunAt      DateTime?
+
+  input Json?
 
   // The name of the event or the cron value for the schedule eg. "TZ=Europe/Paris 0 12 * * 5"
-  trigger String?
+  eventName String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -112,6 +108,10 @@ model Workflow {
   // The foreign key linking this workflow to a specific user.
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  requiredProviders Provider[] @default([])
+
+  config Json?
 
   // This is the new field to reference the join table.
   workflowCredentials WorkflowCredential[]
@@ -134,4 +134,3 @@ model WorkflowCredential {
   @@id([workflowId, credentialId])
   @@map("workflow_credentials")
 }
-

@@ -8,6 +8,7 @@
     "build": "next build --turbopack",
     "start": "next start",
     "refresh": "npx ts-node ./scripts/update-scheduler.ts",
+    "swagger": "node swagger.js",
     "lint": "eslint"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "inngest": "^3.40.1",
     "next": "15.5.0",
     "next-swagger-doc": "^0.4.1",
+    "prisma-field-encryption": "^1.6.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "swagger-jsdoc": "^6.2.8",

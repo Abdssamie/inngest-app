@@ -1,4 +1,4 @@
-import {aes256 as aes} from "aes256";
+import { aes256 as aes } from "aes256";
 
 // Define a secret key. NOTE: Store this securely, e.g., in environment variables.
 const SECRET_KEY = process.env.ENCRYPTION_SECRET_KEY; // Must be 32 bytes for AES-256
@@ -39,4 +39,3 @@ export function decryptCredential(encryptedString: string): object {
 
   return JSON.parse(decryptedString);
 }
-

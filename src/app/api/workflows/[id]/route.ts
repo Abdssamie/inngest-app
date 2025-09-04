@@ -2,7 +2,6 @@ import {auth} from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 import {NextRequest} from "next/server";
 import {JsonValue} from "@prisma/client/runtime/library";
-import {TriggerType} from "@prisma/client";
 
 /**
  * @swagger
@@ -44,8 +43,14 @@ export async function GET(req: NextRequest, {params}: { params: { id: string } }
                 name: true,
                 description: true,
                 enabled: true,
-                triggerType: true,
-                trigger: true,
+                input: true,
+                requiredProviders: true,
+                canBeScheduled: true,
+                timezone: true,
+                lastRunAt: true,
+                cronExpressions: true,
+                nextRunAt: true,
+                eventName: true,
                 createdAt: true,
                 updatedAt: true,
                 workflowCredentials: {
@@ -112,8 +117,7 @@ export async function PUT(req: NextRequest, {params}: { params: { id: string } }
         name: string;
         description: string;
         enabled: boolean;
-        triggerType: TriggerType;
-        trigger: string;
+        eventName: string;
         workflow: JsonValue;
         credentials?: { credentialId: string }[]; // optional
     } = await req.json();
@@ -128,8 +132,7 @@ export async function PUT(req: NextRequest, {params}: { params: { id: string } }
                 name: body.name,
                 description: body.description,
                 enabled: body.enabled,
-                trigger: body.trigger,
-                triggerType: body.triggerType,
+                eventName: body.eventName,
                 ...(body.credentials && body.credentials.length > 0
                     ? {
                         workflowCredentials: {

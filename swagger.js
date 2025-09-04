@@ -1,4 +1,5 @@
 import swaggerJSDoc from 'swagger-jsdoc';
+import fs from "fs";
 
 const options = {
   definition: {
@@ -10,10 +11,18 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000',
+        url: 'http://localhost:3001',
       },
     ],
     components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+          description: "Enter your bearer token in the format: Bearer {token}"
+        },
+      },
       schemas: {
         CredentialCreateRequest: {
           type: 'object',
@@ -91,9 +100,22 @@ const options = {
           },
         },
       },
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
     },
   },
   apis: ['./src/app/api/**/*.ts'], // files containing annotations as above
 };
+
+// Write the specification to a file.
+// A good place to put it is in the `public` directory,
+// so it can be served statically by Next.js.
+fs.writeFileSync(
+  "./public/swagger.json",
+  JSON.stringify(swaggerJSDoc(options), null, 2)
+);
 
 export default swaggerJSDoc(options);

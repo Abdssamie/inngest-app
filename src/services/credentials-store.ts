@@ -1,29 +1,21 @@
+import { CredentialSecret } from "@/lib/credentials/schema";
 import prisma from "@/lib/prisma";
-import {decryptCredential, encryptCredential} from "./encrypt-credentials";
-import { CredentialType } from "@prisma/client";
 import {
     CredentialCreateRequest,
-    DecryptedCredentialPayload,
-    SafeCredentialResponse
+    SafeCredentialResponse,
 } from "@/types/credentials/credential-types";
 import { JsonValue } from "@prisma/client/runtime/library";
 
 
 export async function storeCredential(userId: InternalUserId, credentialData: CredentialCreateRequest): Promise<SafeCredentialResponse> {
-    const encryptedCredential = encryptCredential(credentialData.credential);
-
-    // validate that the credential type is valid and exist in the enum CredentialType
-    if (!Object.values(CredentialType).includes(credentialData.type)) {
-        throw new Error("Invalid credential type");
-    }
-
     try {
         const newCredential = await prisma.credential.create({
             data: {
                 name: credentialData.name,
                 type: credentialData.type,
-                secret: encryptedCredential,
-                userId: userId,
+                provider: credentialData.provider,
+                secret: JSON.stringify(credentialData.secret),
+                userId: userId as string,
                 config: credentialData.config as JsonValue,
             }
         });
@@ -31,6 +23,7 @@ export async function storeCredential(userId: InternalUserId, credentialData: Cr
             id: newCredential.id,
             name: newCredential.name,
             type: newCredential.type,
+            provider: newCredential.provider,
             createdAt: newCredential.createdAt,
             updatedAt: newCredential.updatedAt,
             config: newCredential.config
@@ -40,8 +33,7 @@ export async function storeCredential(userId: InternalUserId, credentialData: Cr
     }
 }
 
-export async function updateCredential(userId: InternalUserId, credentialId: string, credentials: DecryptedCredentialPayload): Promise<SafeCredentialResponse> {
-    const encryptedCredential = encryptCredential(credentials);
+export async function updateCredential(userId: InternalUserId, credentialId: string, credentialSecret: CredentialSecret): Promise<SafeCredentialResponse> {
 
     try {
         const updatedCredential = await prisma.credential.update({
@@ -50,13 +42,14 @@ export async function updateCredential(userId: InternalUserId, credentialId: str
                 userId: userId,
             },
             data: {
-                secret: encryptedCredential,
+                secret: JSON.stringify(credentialSecret),
             }
         });
         return {
             id: updatedCredential.id,
             name: updatedCredential.name,
             type: updatedCredential.type,
+            provider: updatedCredential.provider,
             createdAt: updatedCredential.createdAt,
             updatedAt: updatedCredential.updatedAt,
             config: updatedCredential.config
@@ -90,12 +83,13 @@ export async function getAllUserCredentials(userId: InternalUserId): Promise<Saf
                 id: true,
                 name: true,
                 type: true,
+                provider: true,
                 createdAt: true,
                 updatedAt: true,
                 config: true
             }
         });
-        return credentials.map(c => ({...c, type: c.type, config: c.config}));
+        return credentials;
     } catch (error) {
         throw new Error("Error getting credentials", error)
     }
@@ -112,6 +106,7 @@ export async function getCredential(userId: InternalUserId, credentialId: string
                 id: true,
                 name: true,
                 type: true,
+                provider: true,
                 createdAt: true,
                 updatedAt: true,
                 config: true
@@ -120,7 +115,7 @@ export async function getCredential(userId: InternalUserId, credentialId: string
         if (!credential) {
             return null;
         }
-        return {...credential, type: credential.type, config: credential.config};
+        return credential;
     } catch (error) {
         throw new Error("Error getting credentials", error)
     }

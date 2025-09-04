@@ -3,6 +3,7 @@ import {auth} from "@clerk/nextjs/server";
 import {NextRequest} from "next/server";
 import {CredentialUpdateRequest} from "@/types/credentials/credential-types";
 import { getInternalUserId } from "@/lib/helpers/getInternalUserId";
+import { validateCredentialSecret } from "@/lib/credentials/schema";
 
 
 /**
@@ -56,7 +57,10 @@ export async function GET(req: NextRequest, {params}: { params: { id: string } }
  * @swagger
  * /api/credentials/{id}:
  *   put:
- *     summary: Update a credential
+ *     summary: Update a credential that is of type ApiKey
+ *     tags: [Credentials]
+ *     security:
+ *       - bearerAuth: []
  *     description: Updates a single credential for the authenticated user.
  *     parameters:
  *       - in: path
@@ -99,11 +103,26 @@ export async function PUT(
     try {
         const body: CredentialUpdateRequest = await req.json();
 
-        if (!body || !body.credential) {
+        if (!body || !body.secret) {
             return new Response('Missing credential in request body', {status: 400});
         }
+        
+        const credential = await getCredential(id as InternalUserId, params.id);
+        if (!credential) {
+            return new Response('Credential not found', {status: 404});
+        }
 
-        const updatedCredential = await updateCredential(id as InternalUserId, params.id, body.credential);
+        if (credential.type === 'OAUTH') {
+            return new Response('OAuth credentials cannot be updated directly', {status: 400});
+        }
+
+        const validationResult = validateCredentialSecret(credential.type, credential.provider, body.secret);
+
+        if (!validationResult.success) {
+            return new Response(JSON.stringify({error: validationResult.error}), {status: 400});
+        }
+        
+        const updatedCredential = await updateCredential(id as InternalUserId, params.id, body.secret);
 
         return new Response(JSON.stringify(updatedCredential), {status: 200});
     } catch (error) {
@@ -111,6 +130,7 @@ export async function PUT(
         return new Response('Error updating credentials', {status: 500});
     }
 }
+
 
 /**
  * @swagger

@@ -3,6 +3,7 @@ import {auth} from "@clerk/nextjs/server";
 import {NextRequest} from "next/server";
 import {CredentialCreateRequest} from "@/types/credentials/credential-types";
 import { getInternalUserId } from "@/lib/helpers/getInternalUserId";
+import { validateCredentialSecret } from "@/lib/credentials/schema";
 
 
 /**
@@ -76,6 +77,15 @@ export async function POST(req: NextRequest) {
     }
 
     const body: CredentialCreateRequest = await req.json();
+
+    if (body.type === 'OAUTH') {
+        return new Response('OAuth credentials must be created via the OAuth flow', {status: 400});
+    }
+
+    const validationResult = validateCredentialSecret(body.type, body.provider, body.secret);
+    if (!validationResult.success) {
+        return new Response(JSON.stringify({error: validationResult.error}), {status: 400});
+    }
 
     try {
         const newCredential = await storeCredential(id as InternalUserId, body);

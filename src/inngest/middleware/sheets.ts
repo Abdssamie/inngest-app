@@ -1,21 +1,20 @@
-import {InngestMiddleware} from "inngest";
-import {$Enums, CredentialType, User} from "@prisma/client";
-import {GmailService} from "@/services/integrations/google/gmail";
-import {GoogleCredentialPayload} from "@/types/credentials/credential-types";
-import {JsonValue} from "@prisma/client/runtime/binary";
+import { InngestMiddleware } from "inngest";
+import { $Enums, CredentialType, User } from "@prisma/client";
+import { SheetsService } from "@/services/integrations/google/sheets";
+import { GoogleCredentialPayload } from "@/types/credentials/credential-types";
+import { JsonValue } from "@prisma/client/runtime/binary";
 
 // This middleware depends on the `credentialMiddleware` having already run and
 // populated `ctx.credentials`.
-export const gmailMiddleware = new InngestMiddleware({
-    name: "Gmail Middleware",
+export const sheetsMiddleware = new InngestMiddleware({
+    name: "Sheets Middleware",
     init() {
         return {
             onFunctionRun() {
                 return {
-                    transformInput({ctx}) {
-                        // If credentials aren't in the context, do nothing.
+                    transformInput({ ctx }) {// If credentials aren't in the context, do nothing.
                         const credentials = ctx.credentials as {
-                             id: string;
+                            id: string;
                             type: $Enums.CredentialType;
                             data: object;
                         }[] | undefined;
@@ -35,15 +34,16 @@ export const gmailMiddleware = new InngestMiddleware({
                             return;
                         }
 
-                        const gmailService = new GmailService(
+                        const sheetsService = new SheetsService(
                             user.id,
                             googleCredential.id,
                             googleCredential.data as GoogleCredentialPayload,
                         );
 
+
                         return {
                             ctx: {
-                                gmail: gmailService,
+                                sheets: sheetsService,
                             },
                         };
                     },

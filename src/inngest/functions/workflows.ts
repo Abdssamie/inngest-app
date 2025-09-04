@@ -1,21 +1,50 @@
-//  import workflows definitions from docs/workflows.json
-import workflows from "./docs/workflows.json";
 import prisma from "@/lib/prisma"
-import {TriggerType, Workflow} from "@prisma/client";
+import { CredentialType, Provider, Workflow , Prisma} from "@prisma/client";
 
-// parse the properties of the workflows json file
+enum GOOGLE_SCOPES {
+    SHEETS = "https://www.googleapis.com/auth/spreadsheets",
+    DRIVE = "https://www.googleapis.com/auth/drive",
+    GMAIL = "https://www.googleapis.com/auth/gmail.send",
+}
+
 
 export function createDefaultWorkflows(userId: InternalUserId) {
+
+    const defaultworkflows :Workflow[] = [
+        {
+            name: "Generate a daily report",
+            description: "Generate a daily report for a user",
+            canBeScheduled: true,
+            enabled: false,
+            requiredProviders: [Provider.GOOGLE],
+            cronExpressions: [],
+            config: {
+                requiredScopes: [GOOGLE_SCOPES.SHEETS, GOOGLE_SCOPES.DRIVE, GOOGLE_SCOPES.GMAIL]
+            } as Prisma.JsonValue,
+            eventName: "workflow/report.request",
+            id: "",
+            createdAt: undefined,
+            updatedAt: undefined,
+            timezone: "",
+            lastRunAt: undefined,
+            nextRunAt: undefined,
+            input: "",
+            userId: ""
+        }
+    ]
     try {
         prisma.workflow.createMany({
-            data: workflows.map((workflow) => {
+            data: defaultworkflows.map((workflow) => {
                 return {
-                    id: workflow.id,
+                    userId: userId,
                     name: workflow.name,
                     description: workflow.description,
-                    triggerType: workflow.trigger_type as TriggerType,
-                    trigger: workflow.trigger,
-                    userId: userId,
+                    canBeScheduled: workflow.canBeScheduled,
+                    requiredProviders: workflow.requiredProviders,
+                    enabled: workflow.enabled,
+                    eventName: workflow.eventName,
+                    config: workflow.config,
+                    cronExpressions: workflow.cronExpressions,
                 };
             }),
         });
