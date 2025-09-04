@@ -84,11 +84,16 @@ model Workflow {
   // The name of the workflow, must match the inngest function id
   name String
 
+  templateId String
+
   // A short description of the workflow.
   description String?
 
-  // Wether the workflow is scheduled to run or not
-  enabled Boolean @default(false)  
+  // Whether the workflow instance is enabled for use by the user
+  enabled Boolean @default(true)
+  
+  // Whether the workflow is currently active/scheduled to run or is listening to events (eg. webhooks, internal events)
+  isActive Boolean @default(false)  
 
   canBeScheduled Boolean @default(false)
 
