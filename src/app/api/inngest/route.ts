@@ -1,7 +1,6 @@
 import { serve } from "inngest/next";
 import { inngest } from "@/inngest/client";
-import { generateReportSchedule, generateReport } from "@/inngest/functions/schedules/generate-daily-report";
-import { handleScheduleRequest } from "@/inngest/functions/schedules/scheduler-runner";
+import { generateReportSchedule } from "@/inngest/functions/schedules/generate-daily-report";
 
 /**
  * @swagger
@@ -20,7 +19,5 @@ export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
     generateReportSchedule,
-    generateReport,
-    handleScheduleRequest
   ],
 });

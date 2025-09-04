@@ -2,7 +2,6 @@ import {WebhookEvent} from '@clerk/nextjs/server';
 import {verifyWebhook} from '@clerk/nextjs/webhooks';
 import {NextRequest} from 'next/server';
 import prisma from '@/lib/prisma';
-import {createDefaultWorkflows} from "@/inngest/functions/workflows";
 
 
 /**
@@ -57,8 +56,6 @@ export async function POST(req: NextRequest) {
                     }
                 });
                 console.log('Successfully created user in Database with ID:', id);
-
-                createDefaultWorkflows(user.id as InternalUserId);
 
                 console.log('Successfully created default workflows for user with ID:', id);
 

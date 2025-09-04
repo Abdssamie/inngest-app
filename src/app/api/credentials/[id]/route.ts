@@ -28,7 +28,7 @@ import { validateCredentialSecret } from "@/lib/credentials/schema";
  *       500:
  *         description: Error getting credential.
  */
-export async function GET(req: NextRequest, {params}: { params: { id: string } }) {
+export async function GET({params}: { params: { id: string } }) {
     const user = await auth();
 
     if (!user) {
@@ -153,7 +153,6 @@ export async function PUT(
  *         description: Error deleting credentials.
  */
 export async function DELETE(
-    req: NextRequest,
     {params}: { params: { id: string } }
 ) {
     const user = await auth();

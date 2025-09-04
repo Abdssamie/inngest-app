@@ -69,11 +69,17 @@ export async function GET(request: Request) {
     const { data: userInfo } = await oauth2.userinfo.get();
 
     if (!userInfo.email) {
-      throw new Error("Could not retrieve user email from Google.");
+        return NextResponse.json(
+            { message: "Could not retrieve user email from Google." },
+            { status: 500 }
+        );
     }
 
     if (!tokens.access_token || !tokens.refresh_token || !tokens.expiry_date || !tokens.scope) {
-        throw new Error("Incomplete token data from Google.");
+        return NextResponse.json(
+            { message: "Incomplete token data from Google." },
+            { status: 500 }
+        );
     }
 
     const credentialPayload: GoogleOAuthSecret = {
